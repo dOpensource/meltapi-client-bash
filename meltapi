@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -e
+export MELTAPI_WORKDIR=$(cd $(dirname $0) && pwd)
+. "$MELTAPI_WORKDIR/common"
+
+cli_help() {
+  cli_name=${0##*/}
+  echo "
+$cli_name
+MeltAPI Command Line Interface
+Version: $(cat $MELTAPI_WORKDIR/VERSION)
+Usage: $cli_name [command]
+Commands:
+  domain    Manage Domains
+  *         Help
+"
+  exit 1
+}
+
+#cli_log "Exporting config ..."
+export $(cat "$MELTAPI_WORKDIR/config" | xargs)
+
+#Check if MELTAPI_TOKEN is set
+if [ -z $MELTAPI_TOKEN ]
+then 
+	echo "Please set the MELTAPI_TOKEN by using export MELTAPI_TOKEN=<your token>"
+	exit 1
+fi
+
+#Check if MELTAPI_CONFIG_ID is set
+if [ -z $MELTAPI_CONFIG_ID ]
+then 
+	echo "Please set the MELTAPI_CONFIG_ID by using export MELTAPI_CONFIG_ID=<config_id>"
+	exit 1
+fi
+
+case "$1" in
+  domain|d)
+    "$MELTAPI_WORKDIR/commands/domain" "$2" "$3" "$4"| tee -ia "$MELTAPI_WORKDIR/logs/domain_${2}.log"
+    ;;
+  *)
+    cli_help
+    ;;
+esac
+

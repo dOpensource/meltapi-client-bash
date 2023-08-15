@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+. "$MELTAPI_WORKDIR/common"
+#set -x
+API_SUFFIX=api/v1/mediaserver/domain
+
+cli_help_domain() {
+	echo "
+	Command: domain
+
+Usage:
+	domain get [domain_id]   		- list all domains or specify the domain_id of a particular domain
+	domain add <domain name> [description]  - add a new domain 
+        domain delete|del <domain_id> 		- delete a domain"
+	exit 1
+ 
+}
+
+[ ! -n "$1" ] && cli_help_domain
+
+
+cli_domain_get() {
+
+if [ -z "$1" ] 
+then
+	curl -s -H "Authorization: Bearer $MELTAPI_TOKEN" $API_BASE_URL/$API_SUFFIX/$MELTAPI_CONFIG_ID
+
+else
+	curl -s -H "Authorization: Bearer $MELTAPI_TOKEN" $API_BASE_URL/$API_SUFFIX/$MELTAPI_CONFIG_ID/$1
+fi
+}
+
+cli_domain_add() {
+if [ -z "$1" ]
+then
+	echo "Please specify the name of the domain that you want to add"
+	exit 1
+fi
+
+DATA='{
+   "name": "'$1'",
+   "enabled": true,
+   "description": "'$2'",
+   "config_id": "'$MELTAPI_CONFIG_ID'"
+}'
+
+   curl -s -H "Authorization: Bearer $MELTAPI_TOKEN" -H 'Content-Type: application/json' -X POST -d "$DATA" $API_BASE_URL/$API_SUFFIX
+
+}
+
+cli_domain_del() {
+if [ -z "$1" ]
+then
+	echo "Please specify the domain_id of the domain you want to delete"
+	exit 1
+fi
+
+DATA='{
+   "domain_id": "'$1'",
+   "config_id": "'$MELTAPI_CONFIG_ID'"
+}'
+
+   curl -s -H "Authorization: Bearer $MELTAPI_TOKEN" -H 'Content-Type: application/json' -X DELETE -d "$DATA" $API_BASE_URL/$API_SUFFIX
+
+}
+
+
+
+
+case "$1" in
+	get)
+		cli_domain_get $2
+
+	;;
+
+	add)
+		cli_domain_add $2 $3
+	;;
+
+	del|delete)
+
+		cli_domain_del $2 
+	;;
+
+	*)
+		cli_help
+	;;
+esac
